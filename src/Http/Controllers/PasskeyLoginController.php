@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Config;
 use Laravel\Passkeys\Actions\GenerateVerificationOptions;
 use Laravel\Passkeys\Actions\VerifyPasskey;
 use Laravel\Passkeys\Contracts\PasskeyLoginResponse;
+use Laravel\Passkeys\Events\LoggedInWithPasskey;
 use Laravel\Passkeys\Exceptions\InvalidPasskeyException;
 use Laravel\Passkeys\Http\Requests\PasskeyVerificationRequest;
 use Laravel\Passkeys\Passkeys;
@@ -62,6 +63,8 @@ class PasskeyLoginController extends Controller
         $guard->login($passkey->user, $request->remember());
 
         $request->session()->regenerate();
+
+        LoggedInWithPasskey::dispatch($passkey->user, $passkey);
 
         return app(PasskeyLoginResponse::class);
     }

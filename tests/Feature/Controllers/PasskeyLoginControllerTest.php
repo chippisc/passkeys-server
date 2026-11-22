@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Event;
 use Laravel\Passkeys\Actions\VerifyPasskey;
+use Laravel\Passkeys\Events\LoggedInWithPasskey;
 use Laravel\Passkeys\Passkeys;
 use Laravel\Passkeys\Support\WebAuthn;
 use Laravel\Passkeys\Tests\User;
@@ -36,6 +38,8 @@ it('does not log in when custom sign-in authorization callback returns false', f
 });
 
 it('logs in when custom sign-in authorization callback returns true', function (): void {
+    Event::fake();
+
     $user = User::create([
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
@@ -64,4 +68,6 @@ it('logs in when custom sign-in authorization callback returns true', function (
         ->assertJsonMissing(['verified']);
 
     $this->assertAuthenticatedAs($user);
+
+    Event::assertDispatched(LoggedInWithPasskey::class, fn ($event): bool => $event->user->is($user) && $event->passkey->is($passkey));
 });
